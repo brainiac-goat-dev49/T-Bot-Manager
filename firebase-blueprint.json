@@ -1,0 +1,66 @@
+{
+  "entities": {
+    "Bot": {
+      "title": "Bot",
+      "description": "Represents a connected Telegram bot configuration.",
+      "type": "object",
+      "properties": {
+        "token": { "type": "string", "description": "The Telegram bot API token." },
+        "name": { "type": "string", "description": "The bot's display name." },
+        "username": { "type": "string", "description": "The bot's Telegram username." },
+        "description": { "type": "string", "description": "Detailed description of the bot." },
+        "shortDescription": { "type": "string", "description": "Short description of the bot." },
+        "photoUrl": { "type": "string", "description": "URL to the bot's profile photo." },
+        "isPolling": { "type": "boolean", "description": "Whether the bot is currently polling for updates." },
+        "userId": { "type": "string", "description": "The ID of the owner user." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "aiConfig": { "type": "object" },
+        "maintenanceConfig": { "type": "object" },
+        "integrations": { "type": "object" },
+        "script": { "type": "string" }
+      },
+      "required": ["token", "userId", "name", "username"]
+    },
+    "Log": {
+      "title": "Log",
+      "description": "An execution or event log entry for a specific bot.",
+      "type": "object",
+      "properties": {
+        "botId": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "error", "in", "out"] },
+        "message": { "type": "string" },
+        "details": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["botId", "type", "message", "timestamp"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Billing transaction or invoice.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Paid", "Processing", "Failed"] },
+        "plan": { "type": "string" },
+        "invoiceUrl": { "type": "string" }
+      },
+      "required": ["userId", "amount", "date", "status", "plan"]
+    }
+  },
+  "firestore": {
+    "/bots/{botId}": {
+      "schema": "Bot",
+      "description": "User-owned bots."
+    },
+    "/bots/{botId}/logs/{logId}": {
+      "schema": "Log",
+      "description": "Logs associated with a specific bot."
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "User billing history."
+    }
+  }
+}

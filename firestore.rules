@@ -1,0 +1,80 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // BOT Validation
+    function isValidBot(data) {
+      return data.token is string && data.token.size() <= 256 &&
+             data.name is string && data.name.size() <= 128 &&
+             data.username is string && data.username.size() <= 128 &&
+             data.userId == request.auth.uid;
+    }
+
+    // LOG Validation
+    function isValidLog(data) {
+      return data.botId is string &&
+             data.type in ['info', 'error', 'in', 'out'] &&
+             data.message is string && data.message.size() <= 5000 &&
+             data.timestamp == request.time;
+    }
+
+    // --- RULES ---
+
+    // BOTS collection
+    match /bots/{botId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isOwner(resource.data.userId);
+      
+      allow create: if isVerified() && isValidId(botId) && isValidBot(request.resource.data) &&
+                      request.resource.data.createdAt == request.time;
+      
+      allow update: if isOwner(resource.data.userId) && isValidBot(request.resource.data) &&
+                      request.resource.data.createdAt == resource.data.createdAt &&
+                      request.resource.data.userId == resource.data.userId;
+      
+      allow delete: if isOwner(resource.data.userId);
+
+      // LOGS sub-collection
+      match /logs/{logId} {
+        // DERIVE access from parent bot document
+        function parentBotOwner() {
+          return get(/databases/$(database)/documents/bots/$(botId)).data.userId;
+        }
+
+        allow read, delete: if isOwner(parentBotOwner());
+        
+        allow create: if isVerified() && isValidId(logId) && isValidLog(request.resource.data) &&
+                        parentBotOwner() == request.auth.uid;
+      }
+    }
+
+    // TRANSACTIONS collection
+    match /transactions/{transactionId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      // In a real app, creation would be server-side, but I'll allow read for now
+    }
+  }
+}

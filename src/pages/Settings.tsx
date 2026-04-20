@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Shield, Moon, Sun, Bell, Database, Download, Upload, Activity, Check, X, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings as SettingsIcon, Shield, Moon, Sun, Database, Download, Upload, Activity, Check, X, Loader2, LogOut, User as UserIcon } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 
 const Settings: React.FC = () => {
     const toast = useToast();
+    const { user, logout } = useAuth();
     const [isCheckingApi, setIsCheckingApi] = useState(false);
     const [apiStatus, setApiStatus] = useState<'idle' | 'healthy' | 'error'>('idle');
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -57,6 +59,35 @@ const Settings: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* User Account */}
+                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm md:col-span-2">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <UserIcon size={20} className="text-blue-500" /> Account Settings
+                        </h3>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
+                                    {user?.photoURL ? (
+                                        <img src={user.photoURL} alt="User" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <UserIcon className="text-slate-400" />
+                                    )}
+                                </div>
+                                <div>
+                                    <p className="font-bold text-slate-800">{user?.displayName || 'User'}</p>
+                                    <p className="text-sm text-slate-500">{user?.email}</p>
+                                    <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-bold uppercase mt-1 inline-block border border-green-100 italic">Verified Account</span>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={logout}
+                                className="flex items-center gap-2 px-4 py-2 border border-red-100 text-red-500 bg-red-50 rounded-xl hover:bg-red-100 transition text-sm font-bold"
+                            >
+                                <LogOut size={16} /> Sign Out
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Appearance */}
                     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
